@@ -1,0 +1,21 @@
+{
+  "status": "built",
+  "errors": null,
+  "files": {
+    "main": [
+      "foo/bar.js",
+      "woz/bar.css",
+      "bar/woz.png"
+    ],
+    "foo": [
+      "foo/bar.js",
+      "woz/bar.js",
+      "bar/woz.js"
+    ],
+    "bar": [
+      "foo/bar.css",
+      "woz/bar.css",
+      "bar/woz.js"
+    ]
+  }
+}

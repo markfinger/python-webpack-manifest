@@ -1,0 +1,8 @@
+{
+  "status": "errors",
+  "errors": [
+    "error 1",
+    "error 2"
+  ],
+  "files": null
+}
