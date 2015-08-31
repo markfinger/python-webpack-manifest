@@ -141,7 +141,9 @@ class WebpackManifest(object):
 class WebpackManifestEntry(object):
     def __init__(self, rel_paths, static_url):
         self.js = ''
+        self.rel_js = ()
         self.css = ''
+        self.rel_css = ()
 
         # Frameworks tend to be inconsistent about what they
         # allow with regards to static urls
@@ -154,8 +156,10 @@ class WebpackManifestEntry(object):
             rel_url = '/'.join(rel_path.split(os.path.sep))
             if ext == '.js':
                 self.js += '<script src="{}{}"></script>'.format(static_url, rel_url)
+                self.rel_js += (rel_url,)
             elif ext == '.css':
                 self.css += '<link rel="stylesheet" href="{}{}">'.format(static_url, rel_url)
+                self.rel_css += (rel_url,)
 
         self._contents = rel_paths
         self._static_url = static_url
