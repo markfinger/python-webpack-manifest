@@ -10,12 +10,12 @@ Webpack plugin that emits a manifest file in the following format
 {
 	status: "built" || "building" || "errors",
 	errors: null || [
-		{stack, type, message}
+		"<error text>",
 		...
 	],
 	files: null || {
 		<entry>: [
-			'rel/path/to/file',
+			'rel/path/to/file.ext',
 			...
 		],
 		...
@@ -29,25 +29,6 @@ function WebpackYAMPlugin({manifestPath, outputRoot}) {
 
 	this.manifestPath = manifestPath;
 	this.outputRoot = outputRoot;
-}
-
-function emitManifest({manifestPath, status, errors=null, files=null}) {
-	if (!manifestPath) throw new Error('WebpackYAMPlugin: no `manifestPath` provided in call to emitManifest');
-	if (!status) throw new Error('WebpackYAMPlugin: no `status` provided in call to emitManifest');
-
-	const manifest = JSON.stringify({
-		status,
-		errors,
-		files
-	});
-
-	mkdirp(path.dirname(manifestPath), function(err) {
-		if (err) throw err;
-
-		fs.writeFile(manifestPath, manifest, function(err) {
-			if (err) throw err;
-		});
-	});
 }
 
 WebpackYAMPlugin.prototype.apply = function(compiler) {
@@ -89,5 +70,24 @@ WebpackYAMPlugin.prototype.apply = function(compiler) {
 		}
 	});
 };
+
+function emitManifest({manifestPath, status, errors=null, files=null}) {
+	if (!manifestPath) throw new Error('WebpackYAMPlugin: no `manifestPath` provided in call to emitManifest');
+	if (!status) throw new Error('WebpackYAMPlugin: no `status` provided in call to emitManifest');
+
+	const manifest = JSON.stringify({
+		status,
+		errors,
+		files
+	});
+
+	mkdirp(path.dirname(manifestPath), function(err) {
+		if (err) throw err;
+
+		fs.writeFile(manifestPath, manifest, function(err) {
+			if (err) throw err;
+		});
+	});
+}
 
 module.exports = WebpackYAMPlugin;
