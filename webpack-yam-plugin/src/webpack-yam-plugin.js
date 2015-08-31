@@ -79,7 +79,7 @@ function emitManifest({manifestPath, status, errors=null, files=null}) {
 		status,
 		errors,
 		files
-	});
+	}, null, 2);
 
 	mkdirp(path.dirname(manifestPath), function(err) {
 		if (err) throw err;

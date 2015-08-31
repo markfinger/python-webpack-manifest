@@ -4,7 +4,7 @@ import sourceMapSupport from 'source-map-support';
 import chai from 'chai';
 import rimraf from 'rimraf';
 import webpack from 'webpack';
-import WebpackYAMPlugin from '../webpack-yam-plugin';
+import WebpackYAMPlugin from '../../';
 
 sourceMapSupport.install({
 	handleUncaughtExceptions: false
