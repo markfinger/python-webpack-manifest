@@ -80,12 +80,12 @@ manifest.vendor.rel_css  # ('path/to/file.css', 'path/to/another.css', ...)
 ```
 """
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 import os
 import json
 import time
-import datetime
+from datetime import datetime, timedelta
 
 MANIFEST_CACHE = {}
 
@@ -107,17 +107,15 @@ def load(path, static_url, debug=False, timeout=60):
 
 
 def build(path, static_url, debug, timeout):
-    start = datetime.datetime.now()
-    timeout_delta = datetime.timedelta(seconds=timeout)
-
     data = read(path)
     status = data.get('status', None)
 
     if debug:
         # Lock up the process and wait for webpack to finish building
+        max_timeout = datetime.utcnow() + timedelta(seconds=timeout)
         while status == BUILDING_STATUS:
             time.sleep(0.1)
-            if start + timeout_delta > datetime.datetime.now():
+            if datetime.utcnow() > max_timeout:
                 raise WebpackManifestBuildingStatusTimeout(
                     'Timed out reading the webpack manifest at "{}"'.format(path)
                 )
@@ -198,4 +196,3 @@ class WebpackManifestStatusError(Exception):
 
 class WebpackManifestBuildingStatusTimeout(Exception):
     pass
-
