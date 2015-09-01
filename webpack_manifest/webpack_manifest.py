@@ -80,6 +80,7 @@ manifest.vendor.rel_css  # ('path/to/file.css', 'path/to/another.css', ...)
 ```
 """
 
+__version__ = '0.1.0'
 
 import os
 import json
