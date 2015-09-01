@@ -15,8 +15,8 @@ If you're using this in a project, use `pip`
 pip install webpack-manifest
 ```
 
-If you're using this in an app or library, just copy the [webpack_manifest/webpack_manifest.py] file
-so that you can avoid any dependency pains.
+If you're using this in an app or library, just copy the [loader's file](webpack_manifest/webpack_manifest.py) 
+in so that you can avoid causing any dependency pains downstream.
 
 
 Usage
