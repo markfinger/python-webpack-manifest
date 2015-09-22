@@ -9,7 +9,7 @@ class TestBundles(unittest.TestCase):
     def test_raises_exception_for_missing_manifest(self):
         self.assertRaises(
             webpack_manifest.WebpackManifestFileError,
-            webpack_manifest.read,
+            webpack_manifest.read_file,
             '/path/that/does/not/exist',
         )
 

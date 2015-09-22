@@ -107,7 +107,7 @@ def load(path, static_url, debug=False, timeout=60):
 
 
 def build(path, static_url, debug, timeout):
-    data = read(path)
+    data = read_file(path, debug)
     status = data.get('status', None)
 
     if debug:
@@ -119,7 +119,7 @@ def build(path, static_url, debug, timeout):
                 raise WebpackManifestBuildingStatusTimeout(
                     'Timed out reading the webpack manifest at "{}"'.format(path)
                 )
-            data = read(path)
+            data = read_file(path)
             status = data.get('status', None)
 
     if status == ERRORS_STATUS:
@@ -169,7 +169,7 @@ class WebpackManifestEntry(object):
         self._static_url = static_url
 
 
-def read(path):
+def read_file(path, debug=False):
     if not os.path.isfile(path):
         raise WebpackManifestFileError('Path "{}" is not a file or does not exist'.format(path))
 
@@ -179,7 +179,20 @@ def read(path):
     with open(path, 'r') as manifest_file:
         content = manifest_file.read().encode('utf-8')
 
-    return json.loads(content)
+    if debug and not content:
+        # Detect and prevent possible exceptions caused by a race condition
+        # where the node process has started writing to the file, but has not
+        # flushed the buffer
+        time.sleep(0.5)
+        # Note: intentionally omitting the `debug` arg to prevent recursion
+        return read_file(path)
+
+    try:
+        return json.loads(content)
+    except ValueError:
+        raise WebpackManifestDeserializationError(
+            'Cannot deserialize JSON manifest from file {} with contents {}'.format(path, content)
+        )
 
 
 class WebpackManifestFileError(Exception):
@@ -191,6 +204,10 @@ class WebpackError(Exception):
 
 
 class WebpackManifestStatusError(Exception):
+    pass
+
+
+class WebpackManifestDeserializationError(Exception):
     pass
 
 
