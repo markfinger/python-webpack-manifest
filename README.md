@@ -55,6 +55,11 @@ manifest = webpack_manifest.load(
     # Max timeout (in seconds) that the loader will wait while webpack is building.
     # This setting is only used when the `debug` argument is True
     timeout=60,
+
+    # If a manifest read fails during deserialization, a second attempt will be
+    # made after a small delay. By default, if `read_retry` is `None` and `debug`
+    # is `True`, it well be set to `1`
+    read_retry=None,
 )
 
 # `load` returns a manifest object with properties that match the names of

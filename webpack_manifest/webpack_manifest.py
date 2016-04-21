@@ -56,6 +56,11 @@ manifest = webpack_manifest.load(
     # Max timeout (in seconds) that the loader will wait while webpack is building.
     # This setting is only used when the `debug` argument is True
     timeout=60,
+
+    # If a manifest read fails during deserialization, a second attempt will be
+    # made after a small delay. By default, if `read_retry` is `None` and `debug`
+    # is `True`, it well be set to `1`
+    read_retry=None,
 )
 
 # `load` returns a manifest object with properties that match the names of
@@ -80,12 +85,12 @@ manifest.vendor.rel_css  # ('path/to/file.css', 'path/to/another.css', ...)
 ```
 """
 
-__version__ = '0.2.0'
-
 import os
 import json
 import time
 from datetime import datetime, timedelta
+
+__version__ = '1.0.0'
 
 MANIFEST_CACHE = {}
 
@@ -94,9 +99,13 @@ BUILT_STATUS = 'built'
 ERRORS_STATUS = 'errors'
 
 
-def load(path, static_url, debug=False, timeout=60):
+def load(path, static_url, debug=False, timeout=60, read_retry=None):
+    # Enable failed reads to be retried after a delay of 1 second
+    if debug and read_retry is None:
+        read_retry = 1
+
     if debug or path not in MANIFEST_CACHE:
-        manifest = build(path, static_url, debug, timeout)
+        manifest = build(path, static_url, debug, timeout, read_retry)
 
         if not debug:
             MANIFEST_CACHE[path] = manifest
@@ -106,8 +115,8 @@ def load(path, static_url, debug=False, timeout=60):
     return MANIFEST_CACHE[path]
 
 
-def build(path, static_url, debug, timeout):
-    data = read(path)
+def build(path, static_url, debug, timeout, read_retry):
+    data = read(path, read_retry)
     status = data.get('status', None)
 
     if debug:
@@ -119,7 +128,7 @@ def build(path, static_url, debug, timeout):
                 raise WebpackManifestBuildingStatusTimeout(
                     'Timed out reading the webpack manifest at "{}"'.format(path)
                 )
-            data = read(path)
+            data = read(path, read_retry)
             status = data.get('status', None)
 
     if status == ERRORS_STATUS:
@@ -169,7 +178,7 @@ class WebpackManifestEntry(object):
         self._static_url = static_url
 
 
-def read(path):
+def read(path, read_retry):
     if not os.path.isfile(path):
         raise WebpackManifestFileError('Path "{}" is not a file or does not exist'.format(path))
 
@@ -179,7 +188,20 @@ def read(path):
     with open(path, 'r') as manifest_file:
         content = manifest_file.read().encode('utf-8')
 
-    return json.loads(content)
+    # In certain conditions, the file's contents evaluate to an empty string, so
+    # we provide a hook to perform a single retry after a delay.
+    # While it's a difficult bug to pin down it can happen most commonly during
+    # periods of high cpu-load, so the suspicion is that it's down to race conditions
+    # that are a combination of delays in the OS writing buffers and the fact that we
+    # are handling two competing processes
+    try:
+        return json.loads(content)
+    except ValueError:
+        if not read_retry:
+            raise
+
+        time.sleep(read_retry)
+        return read(path, 0)
 
 
 class WebpackManifestFileError(Exception):

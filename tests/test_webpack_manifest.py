@@ -11,6 +11,7 @@ class TestBundles(unittest.TestCase):
             webpack_manifest.WebpackManifestFileError,
             webpack_manifest.read,
             '/path/that/does/not/exist',
+            None,
         )
 
     def test_manifest_provide_rendered_elements(self):
