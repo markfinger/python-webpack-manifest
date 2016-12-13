@@ -186,7 +186,7 @@ def read(path, read_retry):
         raise WebpackManifestFileError('Path "{}" is not an absolute path to a file'.format(path))
 
     with open(path, 'r') as manifest_file:
-        content = manifest_file.read().encode('utf-8')
+        content = manifest_file.read()
 
     # In certain conditions, the file's contents evaluate to an empty string, so
     # we provide a hook to perform a single retry after a delay.
