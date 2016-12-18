@@ -17,7 +17,7 @@ Documentation
 
 - [Installation](#installation)
 - [Usage](#usage)
-- [Running the Tests](#running-the-tests)
+- [Running the tests](#running-the-tests)
 
 
 Installation
@@ -98,7 +98,7 @@ manifest.vendor.rel_css  # ('path/to/file.css', 'path/to/another.css', ...)
 ```
 
 
-Running the Tests 
+Running the tests 
 -----------------
 
 ```
