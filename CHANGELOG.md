@@ -1,6 +1,10 @@
 Changelog
 =========
 
+### 1.1.0 (19/12/2016)
+
+- Python 3 compatibility fixes from @IlyaSemenov [https://github.com/markfinger/python-webpack-manifest/pull/3]
+
 ### 1.0.0 (21/4/2016)
 
 - Improving handling of write-buffer race conditions.
