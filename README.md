@@ -17,7 +17,7 @@ Documentation
 
 - [Installation](#installation)
 - [Usage](#usage)
-- [Running the tests](#running-the-tests)
+- [How to run the tests](#how-to-run-the-tests)
 
 
 Installation
@@ -98,8 +98,8 @@ manifest.vendor.rel_css  # ('path/to/file.css', 'path/to/another.css', ...)
 ```
 
 
-Running the tests 
------------------
+How to run the tests 
+--------------------
 
 ```
 pip install -r requirements.txt
