@@ -17,7 +17,7 @@ Documentation
 
 - [Installation](#installation)
 - [Usage](#usage)
-- [Running the Tests)[#running-the-tests]
+- [Running the Tests](#running-the-tests)
 
 
 Installation
