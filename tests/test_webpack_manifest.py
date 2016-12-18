@@ -58,7 +58,7 @@ class TestBundles(unittest.TestCase):
             self.assertFalse('should not reach this')
         except webpack_manifest.WebpackError as e:
             self.assertEqual(
-                e.message,
+                e.args[0],
                 'Webpack errors: \n\nerror 1\n\nerror 2',
             )
 
@@ -71,7 +71,7 @@ class TestBundles(unittest.TestCase):
             self.assertFalse('should not reach this')
         except webpack_manifest.WebpackError as e:
             self.assertEqual(
-                e.message,
+                e.args[0],
                 'Webpack errors: \n\nerror 1\n\nerror 2',
             )
 
@@ -87,7 +87,7 @@ class TestBundles(unittest.TestCase):
             self.assertFalse('should not reach this')
         except webpack_manifest.WebpackManifestBuildingStatusTimeout as e:
             self.assertEqual(
-                e.message,
+                e.args[0],
                 'Timed out reading the webpack manifest at "{}"'.format(path),
             )
 
@@ -101,6 +101,6 @@ class TestBundles(unittest.TestCase):
             self.assertFalse('should not reach this')
         except webpack_manifest.WebpackManifestStatusError as e:
             self.assertEqual(
-                e.message,
+                e.args[0],
                 'Unknown webpack manifest status: "unknown status"',
             )
