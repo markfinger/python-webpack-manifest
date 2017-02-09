@@ -61,16 +61,21 @@ manifest = webpack_manifest.load(
     # made after a small delay. By default, if `read_retry` is `None` and `debug`
     # is `True`, it well be set to `1`
     read_retry=None,
+
+    # If you want to access the actual file content, provide the build directory root
+    static_root='/var/www/static/',
 )
 
 # `load` returns a manifest object with properties that match the names of
 # the entries in your webpack config. The properties matching your entries
 # have `js` and `css` properties that are pre-rendered strings that point
-# to all your JS and CSS assets. Additionally, tuples of relative urls are
-# available under `rel_js` and `rel_css` properties.
+# to all your JS and CSS assets. Additionally, access internal entry data with:
+# `js.rel_urls` and `css.rel_urls` - relative urls
+# `js.content` and `css.content` - raw string content
+# `js.inline` and `css.inline` - pre-rendered inline asset elements
 
 # A string containing pre-rendered script elements for the "main" entry
-manifest.main.js  # '<script src="/static/path/to/file.js"><script><script ... >'
+manifest.main.js  # '<script src="/static/path/to/file.js"></script><script ... >'
 
 # A string containing pre-rendered link elements for the "main" entry
 manifest.main.css  # '<link rel="stylesheet" href="/static/path/to/file.css"><link ... >'
@@ -78,8 +83,17 @@ manifest.main.css  # '<link rel="stylesheet" href="/static/path/to/file.css"><li
 # A string containing pre-rendered link elements for the "vendor" entry
 manifest.vendor.css  # '<link rel="stylesheet" href="/static/path/to/file.css"><link ... >'
 
-# A tuple containing relative urls (without the static url) to the "vender" entry
-manifest.vendor.rel_css  # ('path/to/file.css', 'path/to/another.css', ...)
+# A list containing relative urls (without the static url) to the "vender" entry
+manifest.vendor.css.rel_urls  # ['path/to/file.css', 'path/to/another.css', ...]
+
+# A string containing concatenated script elements for the "main" entry
+manifest.main.js.content  # '/* content of file1.js, files2.js, ...*/'
+
+# A string containing pre-rendered inline script elements for the "main" entry
+manifest.main.js.inline  # '<script>/* content of file1.js, files2.js, ...*/</script>'
+
+# A string containing pre-rendered inline style elements for the "main" entry
+manifest.main.css.inline  # '<style>/* content of file1.css, files2.css, ...*/</style>'
 
 # Note: If you don't name your entry, webpack will automatically name it "main".
 ```
@@ -90,7 +104,7 @@ import json
 import time
 from datetime import datetime, timedelta
 
-__version__ = '1.1.0'
+__version__ = '1.2.0'
 
 MANIFEST_CACHE = {}
 
@@ -99,13 +113,13 @@ BUILT_STATUS = 'built'
 ERRORS_STATUS = 'errors'
 
 
-def load(path, static_url, debug=False, timeout=60, read_retry=None):
+def load(path, static_url, debug=False, timeout=60, read_retry=None, static_root=None):
     # Enable failed reads to be retried after a delay of 1 second
     if debug and read_retry is None:
         read_retry = 1
 
     if debug or path not in MANIFEST_CACHE:
-        manifest = build(path, static_url, debug, timeout, read_retry)
+        manifest = build(path, static_url, debug, timeout, read_retry, static_root)
 
         if not debug:
             MANIFEST_CACHE[path] = manifest
@@ -115,7 +129,7 @@ def load(path, static_url, debug=False, timeout=60, read_retry=None):
     return MANIFEST_CACHE[path]
 
 
-def build(path, static_url, debug, timeout, read_retry):
+def build(path, static_url, debug, timeout, read_retry, static_root):
     data = read(path, read_retry)
     status = data.get('status', None)
 
@@ -141,41 +155,96 @@ def build(path, static_url, debug, timeout, read_retry):
     if status != BUILT_STATUS:
         raise WebpackManifestStatusError('Unknown webpack manifest status: "{}"'.format(status))
 
-    return WebpackManifest(data['files'], static_url)
+    return WebpackManifest(data['files'], static_url, static_root)
 
 
 class WebpackManifest(object):
-    def __init__(self, files, static_url):
+    def __init__(self, files, static_url, static_root=None):
         for entry in files:
-            manifest_entry = WebpackManifestEntry(files[entry], static_url)
+            manifest_entry = WebpackManifestEntry(files[entry], static_url, static_root)
             setattr(self, entry, manifest_entry)
 
 
-class WebpackManifestEntry(object):
-    def __init__(self, rel_paths, static_url):
-        self.js = ''
-        self.rel_js = ()
-        self.css = ''
-        self.rel_css = ()
+class WebpackManifestTypeEntry(object):
+    def __init__(self, static_url, static_root=None):
+        self.static_url = static_url
+        self.static_root = static_root
 
+        self.rel_urls = []
+        self.output = ''
+        self._content = None
+        if self.static_root:
+            self.paths = []
+
+    def add_file(self, rel_path):
+        rel_url = '/'.join(rel_path.split(os.path.sep))
+        self.rel_urls.append(rel_url)
+        self.output += self.template.format(self.static_url + rel_url)
+        if self.static_root:
+            self.paths.append(os.path.join(self.static_root, rel_path))
+
+    def __str__(self):
+        return self.output
+
+    @property
+    def content(self):
+        if self._content is None:
+            if not self.static_root:
+                raise WebpackManifestConfigError("Provide static_root to access webpack entry content.")
+            self._content = "\n".join(open(path).read() for path in self.paths)
+        return self._content
+
+    @property
+    def inline(self):
+        content = self.content
+        return self.inline_template.format(content) if content else ''
+
+
+class WebpackManifestJsEntry(WebpackManifestTypeEntry):
+    template = '<script src="{}"></script>'
+    inline_template = '<script>{}</script>'
+
+
+class WebpackManifestCssEntry(WebpackManifestTypeEntry):
+    template = '<link rel="stylesheet" href="{}">'
+    inline_template = '<style>{}</style>'
+
+
+class WebpackManifestEntry(object):
+    supported_extensions = {
+        'js': WebpackManifestJsEntry,
+        'css': WebpackManifestCssEntry,
+    }
+
+    def __init__(self, rel_paths, static_url, static_root=None):
         # Frameworks tend to be inconsistent about what they
         # allow with regards to static urls
         if not static_url.endswith('/'):
             static_url += '/'
 
+        self.rel_paths = rel_paths
+        self.static_url = static_url
+        self.static_root = static_root
+
+        for ext, ext_class in self.supported_extensions.items():
+            setattr(self, ext, ext_class(static_url, static_root))
+
         # Build strings of elements that can be dumped into a template
         for rel_path in rel_paths:
             name, ext = os.path.splitext(rel_path)
-            rel_url = '/'.join(rel_path.split(os.path.sep))
-            if ext == '.js':
-                self.js += '<script src="{}{}"></script>'.format(static_url, rel_url)
-                self.rel_js += (rel_url,)
-            elif ext == '.css':
-                self.css += '<link rel="stylesheet" href="{}{}">'.format(static_url, rel_url)
-                self.rel_css += (rel_url,)
+            ext = ext.lstrip('.').lower()
+            if ext in self.supported_extensions:
+                getattr(self, ext).add_file(rel_path)
 
-        self._contents = rel_paths
-        self._static_url = static_url
+    # Backwards compatibility accessors
+
+    @property
+    def rel_js(self):
+        return self.js.rel_urls
+
+    @property
+    def rel_css(self):
+        return self.css.rel_urls
 
 
 def read(path, read_retry):
@@ -217,4 +286,8 @@ class WebpackManifestStatusError(Exception):
 
 
 class WebpackManifestBuildingStatusTimeout(Exception):
+    pass
+
+
+class WebpackManifestConfigError(Exception):
     pass

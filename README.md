@@ -39,7 +39,7 @@ Usage
 If you installed with pip, import it with
 
 ```python
-import webpack_manifest from webpack_manifest
+from webpack_manifest import webpack_manifest
 ```
 
 If you copied the source file in, import it with
@@ -74,16 +74,21 @@ manifest = webpack_manifest.load(
     # made after a small delay. By default, if `read_retry` is `None` and `debug`
     # is `True`, it well be set to `1`
     read_retry=None,
+
+    # If you want to access the actual file content, provide the build directory root
+    static_root='/var/www/static/',
 )
 
 # `load` returns a manifest object with properties that match the names of
 # the entries in your webpack config. The properties matching your entries
 # have `js` and `css` properties that are pre-rendered strings that point
-# to all your JS and CSS assets. Additionally, tuples of relative urls are
-# available under `rel_js` and `rel_css` properties.
+# to all your JS and CSS assets. Additionally, access internal entry data with:
+# `js.rel_urls` and `css.rel_urls` - relative urls
+# `js.content` and `css.content` - raw string content
+# `js.inline` and `css.inline` - pre-rendered inline asset elements
 
 # A string containing pre-rendered script elements for the "main" entry
-manifest.main.js  # '<script src="/static/path/to/file.js"><script><script ... >'
+manifest.main.js  # '<script src="/static/path/to/file.js"></script><script ... >'
 
 # A string containing pre-rendered link elements for the "main" entry
 manifest.main.css  # '<link rel="stylesheet" href="/static/path/to/file.css"><link ... >'
@@ -91,8 +96,17 @@ manifest.main.css  # '<link rel="stylesheet" href="/static/path/to/file.css"><li
 # A string containing pre-rendered link elements for the "vendor" entry
 manifest.vendor.css  # '<link rel="stylesheet" href="/static/path/to/file.css"><link ... >'
 
-# A tuple containing relative urls (without the static url) to the "vender" entry
-manifest.vendor.rel_css  # ('path/to/file.css', 'path/to/another.css', ...)
+# A list containing relative urls (without the static url) to the "vender" entry
+manifest.vendor.css.rel_urls  # ['path/to/file.css', 'path/to/another.css', ...]
+
+# A string containing concatenated script elements for the "main" entry
+manifest.main.js.content  # '/* content of file1.js, files2.js, ...*/'
+
+# A string containing pre-rendered inline script elements for the "main" entry
+manifest.main.js.inline  # '<script>/* content of file1.js, files2.js, ...*/</script>'
+
+# A string containing pre-rendered inline style elements for the "main" entry
+manifest.main.css.inline  # '<style>/* content of file1.css, files2.css, ...*/</style>'
 
 # Note: If you don't name your entry, webpack will automatically name it "main".
 ```
