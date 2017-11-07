@@ -9,7 +9,7 @@ Manifest loader that allows you to include references to files built by webpack.
 - Provides an opt-in debug mode which disables caching and blocks the python process as webpack completes re-builds
 - Designed to be optionally packaged with redistributable apps+libraries that need to avoid dependency-hell.
 
-If you are using webpack with Django, you might also want to check out Owais' [django-webpack-loader](https://github.com/owais/django-webpack-loader/) project. He has some great docs and the project has a lot of use. This project originated as a re-implementation of django-webpack-loader as I needed support for some of the above features. Personally, I continue to use this project in Django projects by exposing the manifest to templates via a call to `webpack_manifest.load(...)` in a context processor.
+If you are using webpack with Django, you might also want to check out Owais' [django-webpack-loader](https://github.com/owais/django-webpack-loader/) project. He has some great docs and the project has a lot of use. This project originated as a re-implementation of django-webpack-loader as I needed support for some of the above features. Personally, I continue to use this project in Django projects by exposing the manifest to templates via a call to `webpack_manifest.load(...)` in a view or a context processor.
 
 
 Documentation
