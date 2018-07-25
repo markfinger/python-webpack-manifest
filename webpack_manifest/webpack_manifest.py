@@ -180,7 +180,8 @@ class WebpackManifest(object):
 
 
 class WebpackManifestTypeEntry(object):
-    def __init__(self, static_url, static_root=None):
+    def __init__(self, manifest, static_url, static_root=None):
+        self.manifest = manifest
         self.static_url = static_url
         self.static_root = static_root
 
@@ -246,7 +247,7 @@ class WebpackManifestEntry(object):
         self.static_root = static_root
 
         for ext, ext_class in self.supported_extensions.items():
-            setattr(self, ext, ext_class(static_url, static_root))
+            setattr(self, ext, ext_class(self, static_url, static_root))
 
         # Build strings of elements that can be dumped into a template
         for rel_path in rel_paths:
