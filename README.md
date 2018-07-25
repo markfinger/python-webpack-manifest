@@ -129,6 +129,7 @@ WEBPACK_MANIFEST = {
             'path': '/path/to/manifest.json',
             'static_url': STATIC_URL,
             'static_root': STATIC_ROOT,
+            'debug': DEBUG,
         },
     },
 }
