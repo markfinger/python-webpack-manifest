@@ -155,14 +155,28 @@ def build(path, static_url, debug, timeout, read_retry, static_root):
     if status != BUILT_STATUS:
         raise WebpackManifestStatusError('Unknown webpack manifest status: "{}"'.format(status))
 
-    return WebpackManifest(data['files'], static_url, static_root)
+    return WebpackManifest(path, data, static_url, static_root)
 
 
 class WebpackManifest(object):
-    def __init__(self, files, static_url, static_root=None):
-        for entry in files:
-            manifest_entry = WebpackManifestEntry(files[entry], static_url, static_root)
-            setattr(self, entry, manifest_entry)
+    def __init__(self, path, data, static_url, static_root=None):
+        self._path = path
+        self._data = data
+        self._files = data['files']
+        self._static_url = static_url
+        self._static_root = static_root
+        self._manifest_entries = {}
+
+    def __getattr__(self, item):
+        if item in self._manifest_entries:
+            return self._manifest_entries[item]
+
+        if item in self._files:
+            manifest_entry = WebpackManifestEntry(self._files[item], self._static_url, self._static_root)
+            self._manifest_entries[item] = manifest_entry
+            return manifest_entry
+
+        raise WebpackErrorUnknownEntryError('Unknown entry "%s" in manifest "%s"' % (item, self._path))
 
 
 class WebpackManifestTypeEntry(object):
@@ -191,7 +205,12 @@ class WebpackManifestTypeEntry(object):
         if self._content is None:
             if not self.static_root:
                 raise WebpackManifestConfigError("Provide static_root to access webpack entry content.")
-            self._content = "\n".join(open(path).read() for path in self.paths)
+
+            buffer = []
+            for path in self.paths:
+                with open(path, 'r') as content_file:
+                    buffer.append(content_file.read())
+            self._content = '\n'.join(buffer)
         return self._content
 
     @property
@@ -286,6 +305,10 @@ class WebpackManifestStatusError(Exception):
 
 
 class WebpackManifestBuildingStatusTimeout(Exception):
+    pass
+
+
+class WebpackErrorUnknownEntryError(Exception):
     pass
 
 

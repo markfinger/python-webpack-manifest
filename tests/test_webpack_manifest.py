@@ -168,3 +168,18 @@ class TestBundles(unittest.TestCase):
                 e.args[0],
                 'Unknown webpack manifest status: "unknown status"',
             )
+
+    def test_handles_missing_entries(self):
+        path = os.path.join(TEST_ROOT, 'test_manifest_1.json')
+        try:
+            manifest = webpack_manifest.load(
+                path,
+                static_url='/static',
+            )
+            manifest.glub
+            self.assertFalse('should not reach this')
+        except webpack_manifest.WebpackErrorUnknownEntryError as e:
+            self.assertEqual(
+                e.args[0],
+                'Unknown entry "glub" in manifest "%s"' % path,
+            )
