@@ -17,6 +17,7 @@ Documentation
 
 - [Installation](#installation)
 - [Usage](#usage)
+- [Usage in Django](#usage-in-django)
 - [How to run the tests](#how-to-run-the-tests)
 
 
@@ -109,6 +110,40 @@ manifest.main.js.inline  # '<script>/* content of file1.js, files2.js, ...*/</sc
 manifest.main.css.inline  # '<style>/* content of file1.css, files2.css, ...*/</style>'
 
 # Note: If you don't name your entry, webpack will automatically name it "main".
+```
+
+
+Usage in Django
+---------------
+
+
+```python
+INSTALLED_APPS = (
+    # ...
+    'webpack_manifest',
+)
+
+WEBPACK_MANIFEST = {
+    'manifests': {
+        'my_project': {
+            'path': '/path/to/manifest.json',
+            'static_url': STATIC_URL,
+            'static_root': STATIC_ROOT,
+        },
+    },
+}
+```
+
+```html
+{% load webpack_manifest_tags %}
+
+{% load_webpack_manifest 'my_project' as manifest %}
+
+<!-- render any stylesheets from the build -->
+{{ manifest.main.css|safe }}
+
+<!-- render any scripts from the build -->
+{{ manifest.main.js|safe }}
 ```
 
 
