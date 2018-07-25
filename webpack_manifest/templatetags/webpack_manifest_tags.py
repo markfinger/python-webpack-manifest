@@ -14,7 +14,7 @@ register = template.Library()
 
 
 @register.simple_tag
-def load_webpack_manfiest(name):
+def load_webpack_manifest(name):
     if name not in settings.WEBPACK_MANIFEST['manifests']:
         raise webpack_manifest.WebpackManifestConfigError(
             '"%s" has not been defined in `WEBPACK_MANIFEST[\'manifests\']`' % name,
