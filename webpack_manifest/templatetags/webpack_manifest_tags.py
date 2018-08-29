@@ -28,8 +28,4 @@ def load_webpack_manifest(name):
                 '"%s" has not been defined in `WEBPACK_MANIFEST[\'manifests\'][\'%s\']`' % (prop, name),
             )
 
-    return webpack_manifest.load(
-        path=conf['path'],
-        static_url=conf['static_url'],
-        static_root=conf['static_root'],
-    )
+    return webpack_manifest.load(**conf)
