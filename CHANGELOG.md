@@ -1,6 +1,11 @@
 Changelog
 =========
 
+### 2.1.1 (29/08/2018)
+
+- Fixed a bug preventing `debug` flag from being passed to the Django template tag.
+
+
 ### 2.1.0 (26/07/2018)
 
 - Added Django template tag to load manifests during template runtime.

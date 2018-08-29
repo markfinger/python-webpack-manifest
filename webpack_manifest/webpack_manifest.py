@@ -29,7 +29,7 @@ import json
 import time
 from datetime import datetime, timedelta
 
-__version__ = '2.1.0'
+__version__ = '2.1.1'
 
 MANIFEST_CACHE = {}
 
